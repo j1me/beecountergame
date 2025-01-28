@@ -1,0 +1,420 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #ffffff;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.game-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+    padding-top: 80px; /* Add space for fixed header */
+}
+
+.bee-container {
+    position: relative;
+    min-height: 100vh;
+    background-color: #ffffff;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.game-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 25px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+input[type="number"] {
+    border: none;
+    border-radius: 20px 0 0 20px;
+    width: 150px;
+    height: 40px;
+    padding: 0 15px;
+    font-size: 16px;
+    background: transparent;
+}
+
+input[type="number"]:focus {
+    outline: none;
+}
+
+/* Common button styles */
+button {
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 215, 0, 0.7);
+    color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+button:hover {
+    background: rgba(255, 215, 0, 0.9);
+    transform: scale(1.05);
+}
+
+/* Submit button specific styles */
+.submit-button {
+    border-radius: 0 20px 20px 0;
+    width: 45px;
+    height: 40px;
+    font-size: 20px;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.submit-button::after {
+    content: "⏎";
+    line-height: 1;
+}
+
+/* Reset button specific styles */
+.reset-button {
+    grid-column: 3;
+    justify-self: end;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.reset-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M48.5 224H40c-13.3 0-24-10.7-24-24V72c0-9.7 5.8-18.5 14.8-22.2s19.3-1.7 26.2 5.2L98.6 96.6c87.6-86.5 228.7-86.2 315.8 1c87.5 87.5 87.5 229.3 0 316.8s-229.3 87.5-316.8 0c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0c62.5 62.5 163.8 62.5 226.3 0s62.5-163.8 0-226.3c-62.2-62.2-162.7-62.5-225.3-1L185 183c6.9 6.9 8.9 17.2 5.2 26.2s-12.5 14.8-22.2 14.8H48.5z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.reset-button:hover {
+    transform: scale(1.1);
+}
+
+/* Remove hover background change */
+.reset-button:hover::before {
+    opacity: 0.7;
+}
+
+/* Hide button text */
+button span {
+    display: none;
+}
+
+.bee {
+    position: absolute;
+    font-size: 30px;
+    user-select: none;
+    transition: transform 0.3s;
+}
+
+/* Animation for new bees */
+.bee-appear {
+    animation: beeEntrance 0.5s ease-out;
+    opacity: 0;
+    animation-fill-mode: forwards;
+}
+
+@keyframes beeEntrance {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+.feedback {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    min-width: 300px;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.feedback.success {
+    background-color: #a8e6cf;
+    color: #1b4332;
+    display: block;
+}
+
+.feedback.error {
+    background-color: #ffb7b2;
+    color: #7f1d1d;
+    display: block;
+}
+
+@media (max-width: 600px) {
+    .game-controls {
+        flex-direction: row;
+        width: auto;
+    }
+    
+    .input-group {
+        width: auto;
+    }
+    
+    input[type="number"] {
+        width: 120px;
+    }
+}
+
+.score-container {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+#highScore {
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+#visibleCounter {
+    display: none;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1200px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    display: grid;
+    grid-template-columns: 40px 1fr 40px; /* Left space, center content, reset button */
+    align-items: center;
+}
+
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.score-container {
+    font-size: 0.8rem;
+    color: #333;
+}
+
+#highScore {
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.reset-button {
+    grid-column: 3;
+    justify-self: end;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 215, 0, 0.7);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 0;
+}
+
+/* Help button styles */
+.help-button {
+    grid-column: 1;
+    justify-self: start;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.help-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM169.8 165.3c7.9-22.3 29.1-37.3 52.8-37.3h58.3c34.9 0 63.1 28.3 63.1 63.1c0 22.6-12.1 43.5-31.7 54.8L280 264.4c-.2 13-10.9 23.6-24 23.6c-13.3 0-24-10.7-24-24V250.5c0-8.6 4.6-16.5 12.1-20.8l44.3-25.4c4.7-2.7 7.6-7.7 7.6-13.1c0-8.4-6.8-15.1-15.1-15.1H222.6c-3.4 0-6.4 2.1-7.5 5.3l-.4 1.2c-4.4 12.5-18.2 19-30.6 14.6s-19-18.2-14.6-30.6l.4-1.2zM288 352c0 17.7-14.3 32-32 32s-32-14.3-32-32s14.3-32 32-32s32 14.3 32 32z"/></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.help-button:hover::before {
+    opacity: 0.7;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h2 {
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.modal-content ul {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.modal-content li {
+    padding: 8px 0;
+    color: #555;
+    position: relative;
+    padding-left: 20px;
+}
+
+.modal-content li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #FDB813;
+}
+
+.close-button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #FDB813;
+    color: #333;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.close-button:hover {
+    background: #ffca45;
+}
+
+/* Certificate Modal Styles */
+.certificate-modal .modal-content {
+    max-width: 500px;
+}
+
+.certificate-options {
+    margin: 20px 0;
+}
+
+.certificate-options label {
+    display: block;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.certificate-options input {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.certificate-button {
+    width: 100%;
+    padding: 12px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.certificate-button:hover {
+    background: #45a049;
+}
+
+/* Certificate Template Styles */
+.certificate-template {
+    display: none;
+} 

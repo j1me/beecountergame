@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bee Counter Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <header>
+            <div class="help-button-container">
+                <button id="helpButton" class="help-button"><span>Help</span></button>
+            </div>
+            <div class="header-center">
+                <h1>Bee Counter Game</h1>
+                <div class="score-container">
+                    <p>Highest Correct Count: <span id="highScore">0</span></p>
+                </div>
+            </div>
+            <button id="resetGame" class="reset-button"><span>Reset</span></button>
+        </header>
+
+        <div class="game-controls">
+            <div class="input-group">
+                <input type="number" id="beeCount" placeholder="Count?" min="0">
+                <button id="submitCount" class="submit-button"><span>Submit Count</span></button>
+            </div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
+
+        <div id="beeContainer" class="bee-container">
+            <!-- Bees will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Add Modal for Help -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <h2>How to Play</h2>
+            <ul>
+                <li>Count all the bees you can see on your screen</li>
+                <li>New bees appear as you scroll down</li>
+                <li>Enter your count in the input box</li>
+                <li>Try to get the highest correct count!</li>
+            </ul>
+            <button id="closeHelp" class="close-button">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Add Certificate Modal -->
+    <div id="certificateModal" class="modal certificate-modal">
+        <div class="modal-content">
+            <h2>🎉 Congratulations!</h2>
+            <p>You successfully counted <span id="certCount">0</span> bees!</p>
+            <div class="certificate-options">
+                <label>
+                    Your Name:
+                    <input type="text" id="certName" placeholder="Enter your name">
+                </label>
+                <button id="generateCert" class="certificate-button">Generate Certificate 🏆</button>
+            </div>
+            <button id="closeCert" class="close-button">Close</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
