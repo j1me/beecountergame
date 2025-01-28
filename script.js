@@ -10,6 +10,7 @@ class BeeGame {
         this.bees = [];
         this.highestCorrectCount = 0;
         this.isGenerating = false;
+        this.isInputFocused = false;  // New flag to track input focus state
         
         // Track the last filled position
         this.lastFilledPosition = 0;
@@ -56,9 +57,21 @@ class BeeGame {
             if (e.key === 'Enter') this.checkAnswer();
         });
 
+        // Add focus and blur event listeners for the input
+        this.beeCount.addEventListener('focus', () => {
+            this.isInputFocused = true;
+        });
+        
+        this.beeCount.addEventListener('blur', () => {
+            this.isInputFocused = false;
+        });
+
         // Efficient scroll handling
         let scrollTimeout;
         window.addEventListener('scroll', () => {
+            // Don't generate bees if input is focused
+            if (this.isInputFocused) return;
+            
             if (scrollTimeout) return;
             scrollTimeout = setTimeout(() => {
                 this.handleScroll();
