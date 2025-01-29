@@ -48,7 +48,7 @@ class BeeGame {
         this.leaderboardBody = document.getElementById('leaderboardBody');
         
         // Google Apps Script URL
-        this.apiUrl = 'https://script.google.com/macros/s/AKfycbw68F22Q-WfMbkYynlkkHK-W3Sw_oayFC0eeIDsYfcDl3Aapv8S7AvkAEetPQNwWbDqNg/exec';
+        this.apiUrl = 'https://script.google.com/macros/s/AKfycbzgK72WqEMmZZw9z-qiD_s7TQZxKMa7jPrk5GkWpdzVd3tfJlIb31lRa5NVpEOO5xMRcg/exec';
         
         this.init();
     }
@@ -438,59 +438,22 @@ class BeeGame {
 
     async loadLeaderboard() {
         try {
-            // First try to fetch with no-cors to handle the redirect
+            this.showLeaderboardMessage('Loading scores...', 'loading');
+            
             const response = await fetch(`${this.apiUrl}?action=getScores`, {
                 method: 'GET',
-                mode: 'no-cors',  // Changed to no-cors
-                cache: 'no-cache',
-                credentials: 'omit',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                mode: 'cors'
             });
             
-            // If we get here, check if we got a valid response
-            if (response.type === 'opaque') {
-                // no-cors response, show temporary message
-                this.showLeaderboardMessage('Loading scores...', 'loading');
-                
-                // Try again after a short delay with regular cors mode
-                setTimeout(async () => {
-                    try {
-                        const secondResponse = await fetch(`${this.apiUrl}?action=getScores`, {
-                            method: 'GET',
-                            mode: 'cors',
-                            cache: 'no-cache',
-                            credentials: 'omit',
-                            headers: {
-                                'Accept': 'application/json'
-                            }
-                        });
-                        
-                        if (!secondResponse.ok) {
-                            throw new Error(`HTTP error! status: ${secondResponse.status}`);
-                        }
-                        
-                        const data = await secondResponse.json();
-                        if (data.status === 'success') {
-                            this.updateLeaderboardUI(data.data);
-                        } else {
-                            throw new Error('Invalid data format');
-                        }
-                    } catch (error) {
-                        console.error('Error in second attempt:', error);
-                        this.showLeaderboardError();
-                    }
-                }, 1000);
-            } else if (response.ok) {
-                const data = await response.json();
-                if (data.status === 'success') {
-                    this.updateLeaderboardUI(data.data);
-                } else {
-                    throw new Error('Invalid data format');
-                }
-            } else {
+            if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            if (data.status === 'success' && Array.isArray(data.data)) {
+                this.updateLeaderboardUI(data.data);
+            } else {
+                throw new Error('Invalid data format');
             }
         } catch (error) {
             console.error('Error loading leaderboard:', error);
@@ -500,62 +463,35 @@ class BeeGame {
 
     async submitScore(name, score) {
         try {
-            // Show submitting message
             this.showLeaderboardMessage('Submitting score...', 'loading');
             
-            // First attempt with no-cors
+            // Create form data for the POST request
+            const formData = new FormData();
+            formData.append('action', 'addScore');
+            formData.append('name', name);
+            formData.append('score', score);
+            
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                credentials: 'omit',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    action: 'addScore',
-                    name: name,
-                    score: score
-                })
+                mode: 'cors',
+                body: formData
             });
 
-            // If we get here, try a second request after a delay
-            setTimeout(async () => {
-                try {
-                    const secondResponse = await fetch(`${this.apiUrl}?action=getScores`, {
-                        method: 'GET',
-                        mode: 'cors',
-                        cache: 'no-cache',
-                        credentials: 'omit',
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-                    if (!secondResponse.ok) {
-                        throw new Error(`HTTP error! status: ${secondResponse.status}`);
-                    }
-
-                    const data = await secondResponse.json();
-                    if (data.status === 'success') {
-                        this.updateLeaderboardUI(data.data);
-                        this.showLeaderboardMessage('Score submitted successfully!', 'success');
-                        return true;
-                    } else {
-                        throw new Error('Invalid data format');
-                    }
-                } catch (error) {
-                    console.error('Error in second attempt:', error);
-                    this.showLeaderboardError();
-                    return false;
-                }
-            }, 1000);
-
-            return true; // Optimistic return
+            const data = await response.json();
+            if (data.status === 'success') {
+                await this.loadLeaderboard(); // Reload the leaderboard
+                this.showLeaderboardMessage('Score submitted successfully!', 'success');
+                return true;
+            } else {
+                throw new Error(data.message || 'Invalid data format');
+            }
         } catch (error) {
             console.error('Error submitting score:', error);
-            this.showLeaderboardError();
+            this.showLeaderboardMessage('Failed to submit score. Please try again.', 'error');
             return false;
         }
     }
@@ -563,31 +499,25 @@ class BeeGame {
     showLeaderboardMessage(message, type) {
         this.leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="4" style="text-align: center; padding: 20px; color: ${type === 'loading' ? '#666' : type === 'success' ? '#4CAF50' : '#f44336'};">
-                    ${message} ${type === 'loading' ? '🔄' : type === 'success' ? '✅' : '🐝'}
+                <td colspan="4" class="leaderboard-message ${type}">
+                    ${message} ${type === 'loading' ? '🔄' : type === 'success' ? '✅' : type === 'error' ? '❌' : '🐝'}
                 </td>
             </tr>
         `;
     }
 
     showLeaderboardError() {
-        this.showLeaderboardMessage('Unable to load scores at the moment. Please try again later.', 'error');
+        this.showLeaderboardMessage('Unable to load scores. Please try again later.', 'error');
     }
 
     updateLeaderboardUI(scores) {
         if (!Array.isArray(scores) || scores.length === 0) {
-            this.leaderboardBody.innerHTML = `
-                <tr>
-                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
-                        No scores yet. Be the first to make it to the leaderboard! 🐝
-                    </td>
-                </tr>
-            `;
+            this.showLeaderboardMessage('No scores yet. Be the first to make it to the leaderboard!', 'info');
             return;
         }
 
         this.leaderboardBody.innerHTML = scores.map(([rank, name, score, date]) => `
-            <tr>
+            <tr class="${rank <= 3 ? 'top-' + rank : ''}">
                 <td>${rank}</td>
                 <td>${this.escapeHtml(name)}</td>
                 <td>${score}</td>
