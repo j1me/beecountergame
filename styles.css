@@ -241,8 +241,9 @@ header {
 
 .help-button-container {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
+    padding: 4px;
 }
 
 .help-button, .leaderboard-button {
@@ -256,17 +257,22 @@ header {
     cursor: pointer;
     border: none;
     transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .help-button::before {
     content: "?";
     font-size: 18px;
     font-weight: bold;
+    line-height: 1;
 }
 
 .leaderboard-button::before {
     content: "🏆";
     font-size: 16px;
+    line-height: 1;
 }
 
 .header-center {

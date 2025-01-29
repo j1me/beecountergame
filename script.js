@@ -442,7 +442,11 @@ class BeeGame {
             
             const response = await fetch(`${this.apiUrl}?action=getScores`, {
                 method: 'GET',
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                credentials: 'omit'
             });
             
             if (!response.ok) {
@@ -465,16 +469,21 @@ class BeeGame {
         try {
             this.showLeaderboardMessage('Submitting score...', 'loading');
             
-            // Create form data for the POST request
-            const formData = new FormData();
-            formData.append('action', 'addScore');
-            formData.append('name', name);
-            formData.append('score', score);
+            // Create URL-encoded form data instead of FormData
+            const params = new URLSearchParams();
+            params.append('action', 'addScore');
+            params.append('name', name);
+            params.append('score', score);
             
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 mode: 'cors',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
+                },
+                body: params.toString(),
+                credentials: 'omit'
             });
 
             if (!response.ok) {
