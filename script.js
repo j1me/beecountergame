@@ -40,6 +40,8 @@ class BeeGame {
         this.generateCertButton = document.getElementById('generateCert');
         this.closeCertButton = document.getElementById('closeCert');
         
+        this.shareButton = document.getElementById('shareButton');
+        
         this.init();
     }
 
@@ -49,6 +51,7 @@ class BeeGame {
         this.setupEventListeners();
         this.initializeContainer();
         this.fillInitialViewport();
+        this.setupShareButton();
     }
 
     setupEventListeners() {
@@ -111,6 +114,35 @@ class BeeGame {
         this.closeCertButton.addEventListener('click', () => {
             this.certificateModal.style.display = 'none';
         });
+    }
+
+    setupShareButton() {
+        this.shareButton.addEventListener('click', () => this.handleShare());
+    }
+
+    async handleShare() {
+        const shareData = {
+            title: '🐝 Test Your Counting Skills: How Many Bees Can You Spot?',
+            text: 'The bees are buzzing, and the challenge gets harder as you scroll! Can you keep up? 🐝✨',
+            url: 'https://beecountergame.jimmeyjose.com'
+        };
+
+        try {
+            if (navigator.share) {
+                // Use native share on mobile
+                await navigator.share(shareData);
+            } else {
+                // Fallback for desktop: copy link to clipboard
+                await navigator.clipboard.writeText(shareData.url);
+                this.showFeedback('Link copied to clipboard!', true);
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+            // Only show error if it's not a user cancellation
+            if (err.name !== 'AbortError') {
+                this.showFeedback('Could not share the game. Try copying the URL from your browser.', false);
+            }
+        }
     }
 
     initializeContainer() {
