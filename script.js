@@ -438,36 +438,43 @@ class BeeGame {
 
     async loadLeaderboard() {
         try {
-            const response = await fetch(`${this.apiUrl}?action=getScores`);
-            const data = await response.json();
+            const response = await fetch(`${this.apiUrl}?action=getScores`, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                redirect: 'follow',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
             
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
             if (data.status === 'success') {
                 this.updateLeaderboardUI(data.data);
             } else {
                 console.error('Failed to load leaderboard:', data);
+                this.showLeaderboardError();
             }
         } catch (error) {
             console.error('Error loading leaderboard:', error);
+            this.showLeaderboardError();
         }
-    }
-
-    updateLeaderboardUI(scores) {
-        this.leaderboardBody.innerHTML = scores.map(([rank, name, score, date]) => `
-            <tr>
-                <td>${rank}</td>
-                <td>${name}</td>
-                <td>${score}</td>
-                <td>${new Date(date).toLocaleDateString()}</td>
-            </tr>
-        `).join('');
     }
 
     async submitScore(name, score) {
         try {
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
+                redirect: 'follow',
                 headers: {
-                    'Content-Type': 'text/plain;charset=utf-8',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     action: 'addScore',
@@ -475,18 +482,64 @@ class BeeGame {
                     score: score
                 })
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
-            
             if (data.status === 'success') {
                 this.updateLeaderboardUI(data.data);
                 return true;
             }
+            this.showLeaderboardError();
             return false;
         } catch (error) {
             console.error('Error submitting score:', error);
+            this.showLeaderboardError();
             return false;
         }
+    }
+
+    showLeaderboardError() {
+        this.leaderboardBody.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
+                    Unable to load scores at the moment. Please try again later. 🐝
+                </td>
+            </tr>
+        `;
+    }
+
+    updateLeaderboardUI(scores) {
+        if (!Array.isArray(scores) || scores.length === 0) {
+            this.leaderboardBody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
+                        No scores yet. Be the first to make it to the leaderboard! 🐝
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        this.leaderboardBody.innerHTML = scores.map(([rank, name, score, date]) => `
+            <tr>
+                <td>${rank}</td>
+                <td>${this.escapeHtml(name)}</td>
+                <td>${score}</td>
+                <td>${new Date(date).toLocaleDateString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 }
 
