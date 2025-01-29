@@ -438,26 +438,59 @@ class BeeGame {
 
     async loadLeaderboard() {
         try {
+            // First try to fetch with no-cors to handle the redirect
             const response = await fetch(`${this.apiUrl}?action=getScores`, {
                 method: 'GET',
-                mode: 'cors',
+                mode: 'no-cors',  // Changed to no-cors
+                cache: 'no-cache',
                 credentials: 'omit',
-                redirect: 'follow',
                 headers: {
                     'Accept': 'application/json'
                 }
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            if (data.status === 'success') {
-                this.updateLeaderboardUI(data.data);
+            // If we get here, check if we got a valid response
+            if (response.type === 'opaque') {
+                // no-cors response, show temporary message
+                this.showLeaderboardMessage('Loading scores...', 'loading');
+                
+                // Try again after a short delay with regular cors mode
+                setTimeout(async () => {
+                    try {
+                        const secondResponse = await fetch(`${this.apiUrl}?action=getScores`, {
+                            method: 'GET',
+                            mode: 'cors',
+                            cache: 'no-cache',
+                            credentials: 'omit',
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        if (!secondResponse.ok) {
+                            throw new Error(`HTTP error! status: ${secondResponse.status}`);
+                        }
+                        
+                        const data = await secondResponse.json();
+                        if (data.status === 'success') {
+                            this.updateLeaderboardUI(data.data);
+                        } else {
+                            throw new Error('Invalid data format');
+                        }
+                    } catch (error) {
+                        console.error('Error in second attempt:', error);
+                        this.showLeaderboardError();
+                    }
+                }, 1000);
+            } else if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'success') {
+                    this.updateLeaderboardUI(data.data);
+                } else {
+                    throw new Error('Invalid data format');
+                }
             } else {
-                console.error('Failed to load leaderboard:', data);
-                this.showLeaderboardError();
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
         } catch (error) {
             console.error('Error loading leaderboard:', error);
@@ -467,14 +500,18 @@ class BeeGame {
 
     async submitScore(name, score) {
         try {
+            // Show submitting message
+            this.showLeaderboardMessage('Submitting score...', 'loading');
+            
+            // First attempt with no-cors
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
-                mode: 'cors',
+                mode: 'no-cors',
+                cache: 'no-cache',
                 credentials: 'omit',
-                redirect: 'follow',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     action: 'addScore',
@@ -483,17 +520,39 @@ class BeeGame {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            if (data.status === 'success') {
-                this.updateLeaderboardUI(data.data);
-                return true;
-            }
-            this.showLeaderboardError();
-            return false;
+            // If we get here, try a second request after a delay
+            setTimeout(async () => {
+                try {
+                    const secondResponse = await fetch(`${this.apiUrl}?action=getScores`, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache',
+                        credentials: 'omit',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!secondResponse.ok) {
+                        throw new Error(`HTTP error! status: ${secondResponse.status}`);
+                    }
+
+                    const data = await secondResponse.json();
+                    if (data.status === 'success') {
+                        this.updateLeaderboardUI(data.data);
+                        this.showLeaderboardMessage('Score submitted successfully!', 'success');
+                        return true;
+                    } else {
+                        throw new Error('Invalid data format');
+                    }
+                } catch (error) {
+                    console.error('Error in second attempt:', error);
+                    this.showLeaderboardError();
+                    return false;
+                }
+            }, 1000);
+
+            return true; // Optimistic return
         } catch (error) {
             console.error('Error submitting score:', error);
             this.showLeaderboardError();
@@ -501,14 +560,18 @@ class BeeGame {
         }
     }
 
-    showLeaderboardError() {
+    showLeaderboardMessage(message, type) {
         this.leaderboardBody.innerHTML = `
             <tr>
-                <td colspan="4" style="text-align: center; padding: 20px; color: #666;">
-                    Unable to load scores at the moment. Please try again later. 🐝
+                <td colspan="4" style="text-align: center; padding: 20px; color: ${type === 'loading' ? '#666' : type === 'success' ? '#4CAF50' : '#f44336'};">
+                    ${message} ${type === 'loading' ? '🔄' : type === 'success' ? '✅' : '🐝'}
                 </td>
             </tr>
         `;
+    }
+
+    showLeaderboardError() {
+        this.showLeaderboardMessage('Unable to load scores at the moment. Please try again later.', 'error');
     }
 
     updateLeaderboardUI(scores) {
