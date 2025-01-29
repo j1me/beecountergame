@@ -42,6 +42,14 @@ class BeeGame {
         
         this.shareButton = document.getElementById('shareButton');
         
+        this.leaderboardModal = document.getElementById('leaderboardModal');
+        this.leaderboardButton = document.getElementById('leaderboardButton');
+        this.closeLeaderboardButton = document.getElementById('closeLeaderboard');
+        this.leaderboardBody = document.getElementById('leaderboardBody');
+        
+        // Google Apps Script URL
+        this.apiUrl = 'https://script.google.com/macros/s/AKfycbw68F22Q-WfMbkYynlkkHK-W3Sw_oayFC0eeIDsYfcDl3Aapv8S7AvkAEetPQNwWbDqNg/exec';
+        
         this.init();
     }
 
@@ -52,6 +60,8 @@ class BeeGame {
         this.initializeContainer();
         this.fillInitialViewport();
         this.setupShareButton();
+        this.setupLeaderboardHandlers();
+        this.loadLeaderboard(); // Load leaderboard on startup
     }
 
     setupEventListeners() {
@@ -298,9 +308,31 @@ class BeeGame {
             }
             this.showFeedback(`Correct! There were exactly ${totalBees} bees.`, true);
             
-            // Show certificate option
+            // Show certificate modal and prepare for score submission
             this.certCount.textContent = totalBees;
             this.certificateModal.style.display = 'block';
+            
+            // Modify the certificate generation to also submit the score
+            this.generateCertButton.onclick = async () => {
+                const name = this.certName.value.trim();
+                if (!name) {
+                    alert('Please enter your name first!');
+                    return;
+                }
+
+                // Submit score to leaderboard
+                await this.submitScore(name, totalBees);
+                
+                // Generate certificate
+                this.generateCertificate();
+                
+                // Close the certificate modal
+                this.certificateModal.style.display = 'none';
+                
+                // Show and update leaderboard
+                this.leaderboardModal.style.display = 'block';
+                await this.loadLeaderboard();
+            };
         } else {
             this.showFeedback(`Try again! Your count was off by ${Math.abs(userCount - totalBees)} bees.`, false);
             
@@ -384,6 +416,77 @@ class BeeGame {
 
         // Close modal after generating
         this.certificateModal.style.display = 'none';
+    }
+
+    setupLeaderboardHandlers() {
+        this.leaderboardButton.addEventListener('click', () => {
+            this.leaderboardModal.style.display = 'block';
+            this.loadLeaderboard();
+        });
+
+        this.closeLeaderboardButton.addEventListener('click', () => {
+            this.leaderboardModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === this.leaderboardModal) {
+                this.leaderboardModal.style.display = 'none';
+            }
+        });
+    }
+
+    async loadLeaderboard() {
+        try {
+            const response = await fetch(`${this.apiUrl}?action=getScores`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.updateLeaderboardUI(data.data);
+            } else {
+                console.error('Failed to load leaderboard:', data);
+            }
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+        }
+    }
+
+    updateLeaderboardUI(scores) {
+        this.leaderboardBody.innerHTML = scores.map(([rank, name, score, date]) => `
+            <tr>
+                <td>${rank}</td>
+                <td>${name}</td>
+                <td>${score}</td>
+                <td>${new Date(date).toLocaleDateString()}</td>
+            </tr>
+        `).join('');
+    }
+
+    async submitScore(name, score) {
+        try {
+            const response = await fetch(this.apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify({
+                    action: 'addScore',
+                    name: name,
+                    score: score
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                this.updateLeaderboardUI(data.data);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error submitting score:', error);
+            return false;
+        }
     }
 }
 
