@@ -234,9 +234,39 @@ header {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(3px);
     z-index: 1000;
-    display: grid;
-    grid-template-columns: 40px 1fr 40px; /* Left space, center content, reset button */
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+}
+
+.help-button-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.help-button, .leaderboard-button {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 215, 0, 0.7);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s;
+}
+
+.help-button::before {
+    content: "?";
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.leaderboard-button::before {
+    content: "🏆";
+    font-size: 16px;
 }
 
 .header-center {
@@ -264,10 +294,9 @@ h1 {
 }
 
 .header-buttons {
-    grid-column: 3;
-    justify-self: end;
     display: flex;
-    gap: 8px;
+    gap: 10px;
+    align-items: center;
 }
 
 .share-button {
@@ -531,4 +560,55 @@ h1 {
 .leaderboard-button:hover {
     transform: scale(1.1);
     background: rgba(255, 215, 0, 0.8);
+}
+
+/* Leaderboard styles */
+.leaderboard-message {
+    text-align: center;
+    padding: 20px;
+}
+
+.leaderboard-message.loading {
+    color: #666;
+}
+
+.leaderboard-message.success {
+    color: #4CAF50;
+}
+
+.leaderboard-message.error {
+    color: #f44336;
+}
+
+.leaderboard-message.info {
+    color: #2196F3;
+}
+
+/* Top rank styles */
+.top-1 td:first-child::after {
+    content: " 🥇";
+}
+
+.top-2 td:first-child::after {
+    content: " 🥈";
+}
+
+.top-3 td:first-child::after {
+    content: " 🥉";
+}
+
+.top-1, .top-2, .top-3 {
+    font-weight: bold;
+}
+
+.top-1 {
+    background-color: rgba(255, 215, 0, 0.1);
+}
+
+.top-2 {
+    background-color: rgba(192, 192, 192, 0.1);
+}
+
+.top-3 {
+    background-color: rgba(205, 127, 50, 0.1);
 } 
