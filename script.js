@@ -457,19 +457,12 @@ class BeeGame {
         try {
             this.showLeaderboardMessage('Loading scores...', 'loading');
             
-            // Use URLSearchParams for consistent parameter handling
-            const params = new URLSearchParams({ action: 'getScores' });
-            const url = `${this.apiUrl}?${params.toString()}`;
-            
-            const response = await fetch(url, {
+            const response = await fetch(`${this.apiUrl}?action=getScores`, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'omit',
-                cache: 'no-cache'
+                    'Accept': 'application/json'
+                }
             });
             
             if (!response.ok) {
@@ -502,12 +495,10 @@ class BeeGame {
                 method: 'POST',
                 mode: 'cors',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json'
                 },
-                body: params.toString(),
-                credentials: 'omit',
-                cache: 'no-cache'
+                body: params.toString()
             });
 
             if (!response.ok) {
@@ -516,9 +507,7 @@ class BeeGame {
 
             const data = await response.json();
             if (data.status === 'success') {
-                // Wait a short moment before reloading to ensure the score is saved
-                await new Promise(resolve => setTimeout(resolve, 500));
-                await this.loadLeaderboard();
+                await this.loadLeaderboard(); // Reload the leaderboard
                 this.showLeaderboardMessage('Score submitted successfully!', 'success');
                 return true;
             } else {
