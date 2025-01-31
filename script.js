@@ -50,6 +50,12 @@ class BeeGame {
         // Google Apps Script URL
         this.apiUrl = 'https://script.google.com/macros/s/AKfycbzgK72WqEMmZZw9z-qiD_s7TQZxKMa7jPrk5GkWpdzVd3tfJlIb31lRa5NVpEOO5xMRcg/exec';
         
+        this.welcomeMessage = document.getElementById('welcomeMessage');
+        this.closeWelcomeButton = document.getElementById('closeWelcome');
+        
+        // Check if this is the first visit
+        this.isFirstVisit = !localStorage.getItem('hasVisitedBefore');
+        
         this.init();
     }
 
@@ -61,7 +67,13 @@ class BeeGame {
         this.fillInitialViewport();
         this.setupShareButton();
         this.setupLeaderboardHandlers();
-        this.loadLeaderboard(); // Load leaderboard on startup
+        this.loadLeaderboard();
+        
+        // Show welcome message on first visit
+        if (this.isFirstVisit) {
+            this.welcomeMessage.style.display = 'block';
+            localStorage.setItem('hasVisitedBefore', 'true');
+        }
     }
 
     setupEventListeners() {
@@ -123,6 +135,11 @@ class BeeGame {
         this.generateCertButton.addEventListener('click', () => this.generateCertificate());
         this.closeCertButton.addEventListener('click', () => {
             this.certificateModal.style.display = 'none';
+        });
+
+        // Add welcome message close handler
+        this.closeWelcomeButton.addEventListener('click', () => {
+            this.welcomeMessage.style.display = 'none';
         });
     }
 
@@ -440,13 +457,19 @@ class BeeGame {
         try {
             this.showLeaderboardMessage('Loading scores...', 'loading');
             
-            const response = await fetch(`${this.apiUrl}?action=getScores`, {
+            // Use URLSearchParams for consistent parameter handling
+            const params = new URLSearchParams({ action: 'getScores' });
+            const url = `${this.apiUrl}?${params.toString()}`;
+            
+            const response = await fetch(url, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                credentials: 'omit'
+                credentials: 'omit',
+                cache: 'no-cache'
             });
             
             if (!response.ok) {
@@ -469,7 +492,7 @@ class BeeGame {
         try {
             this.showLeaderboardMessage('Submitting score...', 'loading');
             
-            // Create URL-encoded form data instead of FormData
+            // Create URL-encoded form data
             const params = new URLSearchParams();
             params.append('action', 'addScore');
             params.append('name', name);
@@ -479,11 +502,12 @@ class BeeGame {
                 method: 'POST',
                 mode: 'cors',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
                 body: params.toString(),
-                credentials: 'omit'
+                credentials: 'omit',
+                cache: 'no-cache'
             });
 
             if (!response.ok) {
@@ -492,7 +516,9 @@ class BeeGame {
 
             const data = await response.json();
             if (data.status === 'success') {
-                await this.loadLeaderboard(); // Reload the leaderboard
+                // Wait a short moment before reloading to ensure the score is saved
+                await new Promise(resolve => setTimeout(resolve, 500));
+                await this.loadLeaderboard();
                 this.showLeaderboardMessage('Score submitted successfully!', 'success');
                 return true;
             } else {
@@ -516,7 +542,7 @@ class BeeGame {
     }
 
     showLeaderboardError() {
-        this.showLeaderboardMessage('Unable to load scores. Please try again later.', 'error');
+        this.showLeaderboardMessage('Unable to load scores. Please try refreshing.', 'error');
     }
 
     updateLeaderboardUI(scores) {

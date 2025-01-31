@@ -73,14 +73,39 @@
     <!-- Add Modal for Help -->
     <div id="helpModal" class="modal">
         <div class="modal-content">
-            <h2>How to Play</h2>
-            <ul>
-                <li>Count all the bees you can see on your screen</li>
-                <li>New bees appear as you scroll down</li>
-                <li>Enter your count in the input box</li>
-                <li>Try to get the highest correct count!</li>
-            </ul>
+            <h2>How to Play 🐝</h2>
+            <div class="help-sections">
+                <div class="help-section">
+                    <h3>Game Rules</h3>
+                    <ul>
+                        <li>Count all bees on your screen</li>
+                        <li>Enter your total count to submit</li>
+                        <li>More bees = Higher score</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h3>Best Strategy 🌟</h3>
+                    <ul>
+                        <li>Scroll down to generate new bees</li>
+                        <li>Once you have enough, scroll up to count</li>
+                        <li>Remember: Bees only appear when scrolling down!</li>
+                    </ul>
+                </div>
+            </div>
             <button id="closeHelp" class="close-button">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Add Welcome Message -->
+    <div id="welcomeMessage" class="welcome-message">
+        <div class="welcome-content">
+            <h2>Welcome to Bee Counter! 🐝</h2>
+            <p>How many bees can you count?</p>
+            <div class="welcome-tips">
+                <span>Scroll down to generate new bees, then up to count them</span>
+                <span>Need help? Click <i class="help-icon">?</i> for strategy</span>
+            </div>
+            <button id="closeWelcome" class="welcome-close">Start Counting!</button>
         </div>
     </div>
 
